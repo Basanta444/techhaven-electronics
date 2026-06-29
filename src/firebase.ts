@@ -1,21 +1,21 @@
 // src/firebase.ts
 import { initializeApp } from "firebase/app";
 import { getFirestore } from "firebase/firestore";
-import { getAuth } from "firebase/auth";
+import { getAuth, GoogleAuthProvider } from "firebase/auth";
 
 const firebaseConfig = {
-  apiKey: "AIzaSyBhOZnL3BY3X1AuBiIFKKnxUDRn6rKH4qk",
-  authDomain: "techhaven-electronics.firebaseapp.com",
-  projectId: "techhaven-electronics",
-  storageBucket: "techhaven-electronics.firebasestorage.app",
-  messagingSenderId: "442707930185",
-  appId: "1:442707930185:web:ce48d3885520cf5e21e398",
-  measurementId: "G-JH4T3NCPE7"
+  apiKey: "AIzaSyCjDU72qCZuuu5rGQlgKHlxIUvdqWg8CY4",
+  authDomain: "techhaven-electronics-3d0c6.firebaseapp.com",
+  projectId: "techhaven-electronics-3d0c6",
+  storageBucket: "techhaven-electronics-3d0c6.firebasestorage.app",
+  messagingSenderId: "930469654853",
+  appId: "1:930469654853:web:500024bb591ba035088e2c"
 };
 
 // Initialize Firebase
-export const app = initializeApp(firebaseConfig);
+const app = initializeApp(firebaseConfig);
 
-// Export Database and Authentication so other files can use them
+// Export Services for use in other files
 export const db = getFirestore(app);
 export const auth = getAuth(app);
+export const googleProvider = new GoogleAuthProvider();
