@@ -2,7 +2,10 @@ import React, { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { ProductCard } from '../components/ProductCard';
 import { Product } from '../types';
-import { Button } from '../components/ui/button';
+
+// 1. Import Firebase functions
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const BRANDS = ['Apple', 'Samsung', 'Sony', 'Dell', 'Logitech'];
 const CATEGORIES = ['Laptops', 'Smartphones', 'Audio', 'Monitors', 'Accessories'];
@@ -11,19 +14,35 @@ export function Shop() {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<Product[]>([]);
   const [filtered, setFiltered] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   const categoryFilter = searchParams.get('category');
   const brandFilter = searchParams.get('brand');
 
+  // 2. Fetch products from Firestore instead of the fake API
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => {
-        setProducts(data);
-        setFiltered(data);
-      });
+    const fetchProductsFromFirebase = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const productsData: Product[] = [];
+        
+        querySnapshot.forEach((doc) => {
+          productsData.push({ id: doc.id, ...doc.data() } as Product);
+        });
+        
+        setProducts(productsData);
+        setFiltered(productsData);
+      } catch (error) {
+        console.error("Error fetching from Firebase: ", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProductsFromFirebase();
   }, []);
 
+  // Filter Logic
   useEffect(() => {
     let result = products;
     if (categoryFilter) {
@@ -98,7 +117,10 @@ export function Shop() {
           <h1 className="text-2xl font-bold">Shop</h1>
           <span className="text-sm text-neutral-500">{filtered.length} products</span>
         </div>
-        {filtered.length > 0 ? (
+        
+        {loading ? (
+          <div className="py-20 text-center text-neutral-500">Loading products from database...</div>
+        ) : filtered.length > 0 ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
             {filtered.map(product => (
               <ProductCard key={product.id} product={product} />
