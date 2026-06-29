@@ -50,12 +50,15 @@ export function Login() {
 
       const firebaseUser = userCredential.user;
       
+      // ✅ Check if this user is the administrator based on their email
+      const userRole = firebaseUser.email === 'basantakhadka8484@gmail.com' ? 'admin' : 'user';
+
       // Save to your app's local store
       setUser({
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
         name: firebaseUser.displayName || name || 'User',
-        role: 'user' // Default everyone to a normal user
+        role: userRole // Assigns 'admin' or 'user'
       });
       
       redirectUser();
@@ -72,12 +75,15 @@ export function Login() {
       const result = await signInWithPopup(auth, googleProvider);
       const firebaseUser = result.user;
       
+      // ✅ Also check admin role for Google Sign-In
+      const userRole = firebaseUser.email === 'basantakhadka8484@gmail.com' ? 'admin' : 'user';
+
       // Save to your app's local store
       setUser({
         id: firebaseUser.uid,
         email: firebaseUser.email || '',
         name: firebaseUser.displayName || 'User',
-        role: 'user'
+        role: userRole // Assigns 'admin' or 'user'
       });
       
       redirectUser();
