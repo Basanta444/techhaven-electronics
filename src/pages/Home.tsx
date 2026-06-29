@@ -5,16 +5,17 @@ import { Product } from '../types';
 import { Button } from '../components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
-// 1. Import Firestore services
+// 1. Add Firebase imports
 import { collection, getDocs } from 'firebase/firestore';
 import { db } from '../firebase';
 
 export function Home() {
   const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
 
   // 2. Fetch products from Firebase
   useEffect(() => {
-    const fetchProductsFromFirebase = async () => {
+    const fetchProducts = async () => {
       try {
         const querySnapshot = await getDocs(collection(db, 'products'));
         const productsData: Product[] = [];
@@ -23,11 +24,13 @@ export function Home() {
         });
         setProducts(productsData);
       } catch (error) {
-        console.error("Error fetching products for Home: ", error);
+        console.error("Error fetching from Firebase: ", error);
+      } finally {
+        setLoading(false);
       }
     };
 
-    fetchProductsFromFirebase();
+    fetchProducts();
   }, []);
 
   const featured = products.filter(p => p.featured).slice(0, 4);
@@ -68,11 +71,15 @@ export function Home() {
               View all <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {featured.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-10 text-neutral-500">Loading featured products...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {featured.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
 
@@ -85,11 +92,15 @@ export function Home() {
               View all <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {newArrivals.map(product => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {loading ? (
+            <div className="text-center py-10 text-neutral-500">Loading new arrivals...</div>
+          ) : (
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+              {newArrivals.map(product => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
         </div>
       </section>
     </div>
