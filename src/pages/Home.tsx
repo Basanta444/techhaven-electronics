@@ -5,13 +5,29 @@ import { Product } from '../types';
 import { Button } from '../components/ui/button';
 import { ArrowRight } from 'lucide-react';
 
+// 1. Import Firestore services
+import { collection, getDocs } from 'firebase/firestore';
+import { db } from '../firebase';
+
 export function Home() {
   const [products, setProducts] = useState<Product[]>([]);
 
+  // 2. Fetch products from Firebase
   useEffect(() => {
-    fetch('/api/products')
-      .then(res => res.json())
-      .then(data => setProducts(data));
+    const fetchProductsFromFirebase = async () => {
+      try {
+        const querySnapshot = await getDocs(collection(db, 'products'));
+        const productsData: Product[] = [];
+        querySnapshot.forEach((doc) => {
+          productsData.push({ id: doc.id, ...doc.data() } as Product);
+        });
+        setProducts(productsData);
+      } catch (error) {
+        console.error("Error fetching products for Home: ", error);
+      }
+    };
+
+    fetchProductsFromFirebase();
   }, []);
 
   const featured = products.filter(p => p.featured).slice(0, 4);
