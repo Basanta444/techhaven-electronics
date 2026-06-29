@@ -18,6 +18,9 @@ export function Shop() {
 
   const categoryFilter = searchParams.get('category');
   const brandFilter = searchParams.get('brand');
+  
+  // ✅ Added searchFilter to catch search terms from the Navbar
+  const searchFilter = searchParams.get('search');
 
   // 2. Fetch products from Firestore instead of the fake API
   useEffect(() => {
@@ -42,7 +45,7 @@ export function Shop() {
     fetchProductsFromFirebase();
   }, []);
 
-  // Filter Logic
+  // Filter Logic (Handles category, brand, AND search queries simultaneously)
   useEffect(() => {
     let result = products;
     if (categoryFilter) {
@@ -51,8 +54,13 @@ export function Shop() {
     if (brandFilter) {
       result = result.filter(p => p.brand === brandFilter);
     }
+    // ✅ Added the search query filter
+    if (searchFilter) {
+      const lowerSearch = searchFilter.toLowerCase();
+      result = result.filter(p => p.name.toLowerCase().includes(lowerSearch));
+    }
     setFiltered(result);
-  }, [categoryFilter, brandFilter, products]);
+  }, [categoryFilter, brandFilter, searchFilter, products]);
 
   const updateFilter = (type: 'category' | 'brand', value: string | null) => {
     const newParams = new URLSearchParams(searchParams);
