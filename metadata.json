@@ -1,0 +1,6 @@
+{
+  "name": "TechHaven Electronics",
+  "description": "A comprehensive electronic store with shopping cart, wishlist, checkout, and admin panel.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
