@@ -3,37 +3,69 @@ import { Navigate } from 'react-router-dom';
 import { useStore } from '../store';
 import { Product, Order } from '../types';
 import { Button } from '../components/ui/button';
-import { Package, Users, ShoppingBag, Plus, Trash2 } from 'lucide-react';
+import { Package, ShoppingBag, Plus, Trash2 } from 'lucide-react';
+
+// 1. Import Firebase functions
+import { collection, getDocs, doc, deleteDoc, updateDoc } from 'firebase/firestore';
+import { db } from '../firebase';
 
 export function Admin() {
   const { user } = useStore();
   const [activeTab, setActiveTab] = useState<'products' | 'orders'>('products');
   const [products, setProducts] = useState<Product[]>([]);
   const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
 
+  // 2. Fetch both products and orders from Firebase if user is Admin
   useEffect(() => {
-    if (user?.role === 'admin') {
-      fetch('/api/products').then(res => res.json()).then(setProducts);
-      fetch('/api/orders').then(res => res.json()).then(setOrders);
-    }
+    const fetchAdminData = async () => {
+      if (user?.role === 'admin') {
+        try {
+          setLoading(true);
+          
+          // Fetch Products
+          const prodSnapshot = await getDocs(collection(db, 'products'));
+          const prodList = prodSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Product[];
+          setProducts(prodList);
+
+          // Fetch Orders (Will handle empty state cleanly if you don't have orders yet)
+          const orderSnapshot = await getDocs(collection(db, 'orders'));
+          const orderList = orderSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() })) as Order[];
+          setOrders(orderList);
+        } catch (error) {
+          console.error("Error fetching admin data: ", error);
+        } finally {
+          setLoading(false);
+        }
+      }
+    };
+
+    fetchAdminData();
   }, [user]);
 
+  // Security Check: Redirect non-admins
   if (!user || user.role !== 'admin') {
     return <Navigate to="/" />;
   }
 
+  // 3. Delete product directly from Firestore
   const handleDeleteProduct = async (id: string) => {
-    await fetch(`/api/products/${id}`, { method: 'DELETE' });
-    setProducts(products.filter(p => p.id !== id));
+    try {
+      await deleteDoc(doc(db, 'products', id));
+      setProducts(products.filter(p => p.id !== id));
+    } catch (error) {
+      console.error("Error deleting product: ", error);
+    }
   };
 
+  // 4. Update Order Status in Firestore
   const updateOrderStatus = async (id: string, status: string) => {
-    await fetch(`/api/orders/${id}/status`, {
-      method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ status })
-    });
-    setOrders(orders.map(o => o.id === id ? { ...o, status: status as any } : o));
+    try {
+      await updateDoc(doc(db, 'orders', id), { status });
+      setOrders(orders.map(o => o.id === id ? { ...o, status: status as any } : o));
+    } catch (error) {
+      console.error("Error updating order status: ", error);
+    }
   };
 
   const totalRevenue = orders.reduce((acc, order) => acc + order.total, 0);
@@ -75,7 +107,9 @@ export function Admin() {
           </div>
         </div>
 
-        {activeTab === 'products' && (
+        {loading ? (
+          <div className="py-20 text-center text-neutral-500">Loading dashboard...</div>
+        ) : activeTab === 'products' ? (
           <div>
             <div className="flex justify-between items-center mb-6">
               <h3 className="text-xl font-bold">Manage Products</h3>
@@ -111,9 +145,7 @@ export function Admin() {
               </table>
             </div>
           </div>
-        )}
-
-        {activeTab === 'orders' && (
+        ) : (
           <div>
             <h3 className="text-xl font-bold mb-6">Manage Orders</h3>
             <div className="border rounded-lg overflow-hidden bg-white">
