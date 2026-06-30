@@ -11,6 +11,9 @@ export function Checkout() {
   const [paymentMethod, setPaymentMethod] = useState('card');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
+  
+  // 1. Add a success state to track when the order is complete
+  const [isSuccess, setIsSuccess] = useState(false);
 
   const [shipping, setShipping] = useState({
     firstName: '',
@@ -57,9 +60,9 @@ export function Checkout() {
         createdAt: serverTimestamp(),
       });
 
-      // Only clear the cart and navigate away after the order is confirmed saved.
+      // 2. Clear the cart and trigger the success screen instead of navigating away
       clearCart();
-      navigate('/profile', { state: { message: 'Order placed successfully!' } });
+      setIsSuccess(true);
     } catch (err) {
       console.error('Order creation failed:', err);
       setError('Something went wrong placing your order. Please try again.');
@@ -68,6 +71,25 @@ export function Checkout() {
     }
   };
 
+  // 3. Show the success message before checking if the cart is empty
+  if (isSuccess) {
+    return (
+      <div className="container mx-auto max-w-3xl px-4 py-24 flex flex-col items-center text-center">
+        <div className="mb-6 flex h-24 w-24 items-center justify-center rounded-full bg-green-100">
+          <svg className="h-12 w-12 text-green-600" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7" />
+          </svg>
+        </div>
+        <h1 className="text-4xl font-bold mb-4 text-green-700">Purchase was successful!</h1>
+        <p className="text-xl text-neutral-600 mb-8">Thank you for using TechHaven.</p>
+        <Button onClick={() => navigate('/')} className="px-8">
+          Continue Shopping
+        </Button>
+      </div>
+    );
+  }
+
+  // Ensure this stays BELOW the isSuccess check
   if (cart.length === 0) {
     navigate('/cart');
     return null;
